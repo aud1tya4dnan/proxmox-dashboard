@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx @biomejs/biome check --write src/)",
+      "Bash(npx @biomejs/biome check src/)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
