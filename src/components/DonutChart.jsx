@@ -1,11 +1,11 @@
+import { ArcElement, Chart as ChartJS, Tooltip } from 'chart.js'
 import { Doughnut } from 'react-chartjs-2'
-import { Chart as ChartJS, ArcElement, Tooltip } from 'chart.js'
 
 ChartJS.register(ArcElement, Tooltip)
 
 const COLOR_MAP = {
-  good:   '#3fb950',
-  warn:   '#e3b341',
+  good: '#3fb950',
+  warn: '#e3b341',
   danger: '#f85149',
   accent: '#58a6ff',
   purple: '#bc8cff',
@@ -13,16 +13,18 @@ const COLOR_MAP = {
 
 export default function DonutChart({ pct = 0, size = 110, label, sublabel, colorKey = 'accent' }) {
   const color = COLOR_MAP[colorKey] || COLOR_MAP.accent
-  const safeVal = Math.min(Math.max(pct, 0), 100)
+  const safeVal = Math.round(Math.min(Math.max(pct, 0), 100))
 
   const data = {
-    datasets: [{
-      data: [safeVal, 100 - safeVal],
-      backgroundColor: [color, 'rgba(255,255,255,0.05)'],
-      borderWidth: 0,
-      borderRadius: 4,
-      spacing: 2,
-    }],
+    datasets: [
+      {
+        data: [safeVal, 100 - safeVal],
+        backgroundColor: [color, 'rgba(255,255,255,0.05)'],
+        borderWidth: 0,
+        borderRadius: 4,
+        spacing: 2,
+      },
+    ],
   }
 
   const options = {
@@ -39,9 +41,7 @@ export default function DonutChart({ pct = 0, size = 110, label, sublabel, color
         <div className="donut-label-value" style={{ color }}>
           {safeVal}%
         </div>
-        {(label || sublabel) && (
-          <div className="donut-label-sub">{label || sublabel}</div>
-        )}
+        {(label || sublabel) && <div className="donut-label-sub">{label || sublabel}</div>}
       </div>
     </div>
   )

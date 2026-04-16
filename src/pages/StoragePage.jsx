@@ -1,29 +1,13 @@
-import { useEffect, useState } from 'react'
-import { useProxmoxStore } from '../store/useProxmoxStore'
+import { useState } from 'react'
 import RefreshBar from '../components/RefreshBar'
+import { useProxmoxStore } from '../store/useProxmoxStore'
 import { formatBytes, pct } from '../utils/format'
 
-console.log('StoragePage rendered') // Debug logging
-
 export default function StoragePage() {
-  const {
-    storage,
-    loading,
-    lastRefresh,
-    refreshAll,
-  } = useProxmoxStore()
+  const { storage, loading } = useProxmoxStore()
 
-  const [countdown, setCountdown] = useState(30)
   const [nodeFilter, setNodeFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 30))
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
 
   // Get all unique nodes
   const nodes = Object.keys(storage)
@@ -37,9 +21,6 @@ export default function StoragePage() {
       })
     }
   })
-
-  console.log('Storage data:', storage)
-  console.log('Flattened storage:', allStorage)
 
   // Filter storage
   const filteredStorage = allStorage.filter((s) => {
@@ -64,14 +45,14 @@ export default function StoragePage() {
   // Storage type colors
   const getTypeColor = (type) => {
     const colors = {
-      dir: '#58a6ff',      // blue
-      lvm: '#bc8cff',      // purple
-      zfs: '#3fb950',      // green
-      ceph: '#f0883e',     // orange
-      nfs: '#e3b341',      // yellow
-      cifs: '#f85149',     // red
+      dir: '#58a6ff', // blue
+      lvm: '#bc8cff', // purple
+      zfs: '#3fb950', // green
+      ceph: '#f0883e', // orange
+      nfs: '#e3b341', // yellow
+      cifs: '#f85149', // red
       glusterfs: '#ff7b72', // pink
-      btrfs: '#7ee787',    // light green
+      btrfs: '#7ee787', // light green
     }
     return colors[type] || '#8b949e' // gray for unknown
   }
@@ -93,12 +74,7 @@ export default function StoragePage() {
 
   return (
     <div className="page">
-      <RefreshBar
-        lastRefresh={lastRefresh}
-        countdown={countdown}
-        onRefresh={refreshAll}
-        loading={loading}
-      />
+      <RefreshBar />
 
       <div className="page-header">
         <h1>Storage</h1>
@@ -125,7 +101,9 @@ export default function StoragePage() {
           {/* Summary Cards */}
           <div className="grid-4" style={{ marginBottom: '24px' }}>
             <div className="card" style={{ padding: '16px' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Total Storage Pools</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                Total Storage Pools
+              </div>
               <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {totalStorageCount}
               </div>
@@ -144,7 +122,13 @@ export default function StoragePage() {
             </div>
             <div className="card" style={{ padding: '16px' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Overall Usage</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 700, color: totalUsage >= 90 ? 'var(--red)' : totalUsage >= 70 ? 'var(--yellow)' : 'var(--green)' }}>
+              <div
+                style={{
+                  fontSize: '1.8rem',
+                  fontWeight: 700,
+                  color: totalUsage >= 90 ? 'var(--red)' : totalUsage >= 70 ? 'var(--yellow)' : 'var(--green)',
+                }}
+              >
                 {totalUsage.toFixed(1)}%
               </div>
             </div>
@@ -177,12 +161,8 @@ export default function StoragePage() {
                       background: getTypeColor(type),
                     }}
                   />
-                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>
-                    {getTypeName(type)}
-                  </span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    ({typeCounts[type]})
-                  </span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{getTypeName(type)}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({typeCounts[type]})</span>
                 </div>
               ))}
             </div>
@@ -190,9 +170,7 @@ export default function StoragePage() {
 
           {/* Filters */}
           <div className="filter-bar" style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
-              Filter by:
-            </div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Filter by:</div>
 
             {/* Node Filter */}
             <select
@@ -265,9 +243,21 @@ export default function StoragePage() {
 
                     {/* Usage Bar */}
                     <div style={{ marginBottom: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '6px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          fontSize: '0.8rem',
+                          marginBottom: '6px',
+                        }}
+                      >
                         <span style={{ color: 'var(--text-muted)' }}>Usage</span>
-                        <span style={{ fontWeight: 600, color: usage >= 90 ? 'var(--red)' : usage >= 70 ? 'var(--yellow)' : 'var(--green)' }}>
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            color: usage >= 90 ? 'var(--red)' : usage >= 70 ? 'var(--yellow)' : 'var(--green)',
+                          }}
+                        >
                           {usage.toFixed(1)}%
                         </span>
                       </div>
@@ -284,12 +274,23 @@ export default function StoragePage() {
 
                     {/* Sizes */}
                     <div className="storage-sizes">
-                      <span>Used: <strong>{formatBytes(s.used)}</strong></span>
-                      <span>Total: <strong>{formatBytes(s.total)}</strong></span>
+                      <span>
+                        Used: <strong>{formatBytes(s.used)}</strong>
+                      </span>
+                      <span>
+                        Total: <strong>{formatBytes(s.total)}</strong>
+                      </span>
                     </div>
 
                     {/* Additional Info */}
-                    <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-light)', fontSize: '0.75rem' }}>
+                    <div
+                      style={{
+                        marginTop: '16px',
+                        paddingTop: '14px',
+                        borderTop: '1px solid var(--border-light)',
+                        fontSize: '0.75rem',
+                      }}
+                    >
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                         <div>
                           <span style={{ color: 'var(--text-muted)' }}>Status:</span>{' '}
@@ -328,7 +329,14 @@ export default function StoragePage() {
             <h3 style={{ marginBottom: '12px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
               Storage Types Legend
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px', fontSize: '0.8rem' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '12px',
+                fontSize: '0.8rem',
+              }}
+            >
               {storageTypes.map((type) => (
                 <div key={type} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div

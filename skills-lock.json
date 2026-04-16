@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "dashboard-builder": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "computedHash": "f3013462171015dfd91195faafc8395bf1a9f790bd28506ef0992f9c8543ba78"
+    }
+  }
+}

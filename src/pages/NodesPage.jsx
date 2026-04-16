@@ -1,42 +1,35 @@
-import { useEffect, useState } from 'react'
-import { useProxmoxStore } from '../store/useProxmoxStore'
+import { useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import RefreshBar from '../components/RefreshBar'
-import DonutChart from '../components/DonutChart'
 import StatusBadge from '../components/StatusBadge'
-import { formatBytes, formatUptime, formatHz, pct, thresholdClass } from '../utils/format'
+import { useProxmoxStore } from '../store/useProxmoxStore'
+import { formatBytes, formatHz, formatUptime, pct, thresholdClass } from '../utils/format'
 
 export default function NodesPage() {
-  const {
-    nodes,
-    nodeStatuses,
-    nodeRrd,
-    loading,
-    lastRefresh,
-    refreshAll,
-  } = useProxmoxStore()
+  const { nodeName } = useParams()
+  const navigate = useNavigate()
+  const { nodes, nodeStatuses, loading } = useProxmoxStore()
 
-  const [countdown, setCountdown] = useState(30)
-
+  // Scroll to node if navigated from overview
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 30))
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
+    if (nodeName) {
+      const el = document.getElementById(`node-detail-${nodeName}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [nodeName])
 
   return (
     <div className="page">
-      <RefreshBar
-        lastRefresh={lastRefresh}
-        countdown={countdown}
-        onRefresh={refreshAll}
-        loading={loading}
-      />
+      <RefreshBar />
 
       <div className="page-header">
         <h1>Nodes</h1>
         <p>Detailed metrics and performance data per node</p>
+        {nodeName && (
+          <button className="btn btn-ghost btn-sm" style={{ marginTop: '8px' }} onClick={() => navigate('/nodes')}>
+            ← Back to all nodes
+          </button>
+        )}
       </div>
 
       {loading && nodes.length === 0 && (
@@ -58,7 +51,7 @@ export default function NodesPage() {
         <div className="grid-2" style={{ gap: '20px' }}>
           {nodes.map((node) => {
             const status = nodeStatuses[node.node]
-            const rrdData = nodeRrd[node.node] || []
+            // const rrdData = nodeRrd[node.node] || []
 
             if (!status) {
               return (
@@ -74,17 +67,20 @@ export default function NodesPage() {
               )
             }
 
-            const cpuPct = pct(status.cpu, 1) * 100
-            const memPct = pct(status.mem?.used, status.mem?.total)
+            const cpuPct = pct(status.cpu, 1)
+            const memObj = status.memory || status.mem || {}
+            const memPct = pct(memObj.used, memObj.total)
             const swapPct = status.swap?.total ? pct(status.swap.used, status.swap.total) : 0
 
             return (
-              <div key={node.node} className="card node-card">
+              <div key={node.node} className="card node-card" id={`node-detail-${node.node}`}>
                 {/* Header */}
                 <div className="node-card-header">
                   <div>
                     <div className="node-card-name">{node.node}</div>
-                    <div className="node-card-model">{status.cpus} cores × {formatHz(status.cpuinfo?.mhz * 1e6)}</div>
+                    <div className="node-card-model">
+                      {status.cpus} cores × {formatHz(status.cpuinfo?.mhz * 1e6)}
+                    </div>
                   </div>
                   <StatusBadge status={node.status} />
                 </div>
@@ -94,15 +90,10 @@ export default function NodesPage() {
                   <div className="node-metric-row">
                     <div className="node-metric-label-row">
                       <span className="node-metric-label">CPU Usage</span>
-                      <span className={`node-metric-value text-${thresholdClass(cpuPct)}`}>
-                        {cpuPct.toFixed(1)}%
-                      </span>
+                      <span className={`node-metric-value text-${thresholdClass(cpuPct)}`}>{cpuPct.toFixed(1)}%</span>
                     </div>
                     <div className="progress-bar" style={{ height: '8px' }}>
-                      <div
-                        className={`progress-bar-fill ${thresholdClass(cpuPct)}`}
-                        style={{ width: `${cpuPct}%` }}
-                      />
+                      <div className={`progress-bar-fill ${thresholdClass(cpuPct)}`} style={{ width: `${cpuPct}%` }} />
                     </div>
                   </div>
 
@@ -110,18 +101,13 @@ export default function NodesPage() {
                   <div className="node-metric-row">
                     <div className="node-metric-label-row">
                       <span className="node-metric-label">Memory</span>
-                      <span className={`node-metric-value text-${thresholdClass(memPct)}`}>
-                        {memPct.toFixed(1)}%
-                      </span>
+                      <span className={`node-metric-value text-${thresholdClass(memPct)}`}>{memPct.toFixed(1)}%</span>
                     </div>
                     <div className="progress-bar" style={{ height: '8px' }}>
-                      <div
-                        className={`progress-bar-fill ${thresholdClass(memPct)}`}
-                        style={{ width: `${memPct}%` }}
-                      />
+                      <div className={`progress-bar-fill ${thresholdClass(memPct)}`} style={{ width: `${memPct}%` }} />
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      {formatBytes(status.mem?.used)} / {formatBytes(status.mem?.total)}
+                      {formatBytes(memObj.used)} / {formatBytes(memObj.total)}
                     </div>
                   </div>
 
@@ -160,7 +146,12 @@ export default function NodesPage() {
                           className="progress-bar-fill"
                           style={{
                             width: `${pct(status.rootfs.used, status.rootfs.total)}%`,
-                            background: pct(status.rootfs.used, status.rootfs.total) >= 90 ? 'var(--red)' : pct(status.rootfs.used, status.rootfs.total) >= 70 ? 'var(--yellow)' : 'var(--green)'
+                            background:
+                              pct(status.rootfs.used, status.rootfs.total) >= 90
+                                ? 'var(--red)'
+                                : pct(status.rootfs.used, status.rootfs.total) >= 70
+                                  ? 'var(--yellow)'
+                                  : 'var(--green)',
                           }}
                         />
                       </div>
@@ -179,13 +170,18 @@ export default function NodesPage() {
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-muted)' }}>Load:</span>{' '}
-                    <span className="mono">{status.loadavg?.[0]?.toFixed(2)} / {status.loadavg?.[1]?.toFixed(2)} / {status.loadavg?.[2]?.toFixed(2)}</span>
+                    <span className="mono">
+                      {parseFloat(status.loadavg?.[0]).toFixed(2)} / {parseFloat(status.loadavg?.[1]).toFixed(2)} /{' '}
+                      {parseFloat(status.loadavg?.[2]).toFixed(2)}
+                    </span>
                   </div>
                 </div>
 
                 {/* Additional Info */}
                 <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-light)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '0.75rem' }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '0.75rem' }}
+                  >
                     <div>
                       <span style={{ color: 'var(--text-muted)' }}>Kernel:</span>{' '}
                       <span className="mono">{status.kversion || '—'}</span>

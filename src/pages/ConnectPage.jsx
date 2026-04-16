@@ -77,10 +77,18 @@ export default function ConnectPage() {
                 <div style={{ marginTop: '8px', fontSize: '0.8rem' }}>
                   <strong>Solution:</strong> Update your API token permissions in Proxmox UI:
                   <ul style={{ marginLeft: '20px', marginTop: '4px' }}>
-                    <li>Go to <strong>Datacenter → API Tokens</strong></li>
-                    <li>Edit your token and set <strong>Role: PVEAuditor</strong></li>
-                    <li>Set <strong>Path: /</strong> (root, not /nodes)</li>
-                    <li>Ensure <strong>Sys.Audit</strong> privilege is enabled</li>
+                    <li>
+                      Go to <strong>Datacenter → API Tokens</strong>
+                    </li>
+                    <li>
+                      Edit your token and set <strong>Role: PVEAuditor</strong>
+                    </li>
+                    <li>
+                      Set <strong>Path: /</strong> (root, not /nodes)
+                    </li>
+                    <li>
+                      Ensure <strong>Sys.Audit</strong> privilege is enabled
+                    </li>
                   </ul>
                 </div>
               )}
@@ -111,41 +119,65 @@ export default function ConnectPage() {
         <div className="connect-hint">
           <strong>📋 Quick Setup:</strong>
           <ol style={{ marginLeft: '20px', marginTop: '8px' }}>
-            <li>Create an API token in Proxmox: <strong>Datacenter → API Tokens</strong></li>
-            <li>Use format: <code>root@pam!dashboard=&lt;UUID&gt;</code></li>
-            <li><strong>IMPORTANT:</strong> Assign <code>PVEAuditor</code> role on path <code>/</code> (root)</li>
-            <li>Ensure token has <code>Sys.Audit</code> privilege</li>
-            <li>Or set environment variables in <code>.env</code> file</li>
+            <li>
+              Create an API token in Proxmox: <strong>Datacenter → API Tokens</strong>
+            </li>
+            <li>
+              Use format: <code>root@pam!dashboard=&lt;UUID&gt;</code>
+            </li>
+            <li>
+              <strong>IMPORTANT:</strong> Assign <code>PVEAuditor</code> role on path <code>/</code> (root)
+            </li>
+            <li>
+              Ensure token has <code>Sys.Audit</code> privilege
+            </li>
+            <li>
+              Or set environment variables in <code>.env</code> file
+            </li>
           </ol>
           <p style={{ marginTop: '12px', marginBottom: '4px' }}>
             <strong>🔑 Required Token Permissions:</strong>
           </p>
           <ul style={{ marginLeft: '20px' }}>
-            <li><strong>Role:</strong> <code>PVEAuditor</code> (read-only)</li>
-            <li><strong>Path:</strong> <code>/</code> (all resources)</li>
-            <li><strong>Privileges:</strong> <code>Sys.Audit</code>, VM.Audit, Node.Audit, Storage.Audit</li>
+            <li>
+              <strong>Role:</strong> <code>PVEAuditor</code> (read-only)
+            </li>
+            <li>
+              <strong>Path:</strong> <code>/</code> (all resources)
+            </li>
+            <li>
+              <strong>Privileges:</strong> <code>Sys.Audit</code>, VM.Audit, Node.Audit, Storage.Audit
+            </li>
           </ul>
           <p style={{ marginTop: '12px', marginBottom: '4px' }}>
             <strong>⚙️ Requirements:</strong>
           </p>
           <ul style={{ marginLeft: '20px' }}>
             <li>Proxmox VE 7.x or 8.x</li>
-            <li>API token with <strong>PVEAuditor</strong> role</li>
+            <li>
+              API token with <strong>PVEAuditor</strong> role
+            </li>
             <li>Network connectivity to Proxmox host</li>
           </ul>
-          <div style={{
-            marginTop: '16px',
-            padding: '12px',
-            background: 'rgba(88, 166, 255, 0.1)',
-            border: '1px solid rgba(88, 166, 255, 0.3)',
-            borderRadius: 'var(--radius-sm)',
-          }}>
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              background: 'rgba(88, 166, 255, 0.1)',
+              border: '1px solid rgba(88, 166, 255, 0.3)',
+              borderRadius: 'var(--radius-sm)',
+            }}
+          >
             <strong style={{ color: 'var(--accent)' }}>💡 Having 403 Permission Errors?</strong>
             <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
               <li>Edit your API token in Proxmox UI</li>
               <li>Check "Privilege Separation" settings</li>
-              <li>Ensure path is set to <code>/</code> (not <code>/nodes</code>)</li>
-              <li>Verify <code>PVEAuditor</code> role is assigned</li>
+              <li>
+                Ensure path is set to <code>/</code> (not <code>/nodes</code>)
+              </li>
+              <li>
+                Verify <code>PVEAuditor</code> role is assigned
+              </li>
             </ul>
           </div>
         </div>

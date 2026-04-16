@@ -1,17 +1,13 @@
-import { useEffect, useState } from 'react'
-import { useProxmoxStore } from '../store/useProxmoxStore'
+import { useState } from 'react'
 import RefreshBar from '../components/RefreshBar'
 import VMActionButtons from '../components/VMActionButtons'
+import { useProxmoxStore } from '../store/useProxmoxStore'
 import { formatBytes, pct } from '../utils/format'
-
-console.log('VirtualMachinesPage rendered') // Debug logging
 
 export default function VirtualMachinesPage() {
   const {
     vms,
     loading,
-    lastRefresh,
-    refreshAll,
     startQemu,
     stopQemu,
     rebootQemu,
@@ -24,31 +20,19 @@ export default function VirtualMachinesPage() {
     actionLoading,
   } = useProxmoxStore()
 
-  const [countdown, setCountdown] = useState(30)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all') // all, running, stopped, paused
   const [typeFilter, setTypeFilter] = useState('all') // all, qemu, lxc
   const [sortBy, setSortBy] = useState('vmid')
   const [sortOrder, setSortOrder] = useState('asc')
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 30))
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
   // Filter and sort VMs
   const filteredVMs = vms
     .filter((vm) => {
       const matchesSearch =
-        vm.name?.toLowerCase().includes(search.toLowerCase()) ||
-        vm.vmid?.toString().includes(search)
-      const matchesFilter =
-        filter === 'all' || vm.status === filter
-      const matchesType =
-        typeFilter === 'all' || vm.type === typeFilter
+        vm.name?.toLowerCase().includes(search.toLowerCase()) || vm.vmid?.toString().includes(search)
+      const matchesFilter = filter === 'all' || vm.status === filter
+      const matchesType = typeFilter === 'all' || vm.type === typeFilter
       return matchesSearch && matchesFilter && matchesType
     })
     .sort((a, b) => {
@@ -69,9 +53,6 @@ export default function VirtualMachinesPage() {
 
       return sortOrder === 'asc' ? comparison : -comparison
     })
-
-  console.log('VMs data:', vms)
-  console.log('Filtered VMs:', filteredVMs)
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -138,12 +119,7 @@ export default function VirtualMachinesPage() {
 
   return (
     <div className="page">
-      <RefreshBar
-        lastRefresh={lastRefresh}
-        countdown={countdown}
-        onRefresh={refreshAll}
-        loading={loading}
-      />
+      <RefreshBar />
 
       <div className="page-header">
         <h1>Virtual Machines & Containers</h1>
@@ -186,28 +162,16 @@ export default function VirtualMachinesPage() {
         </div>
 
         {/* Status Filter */}
-        <button
-          className={`filter-chip ${filter === 'all' ? 'active' : ''}`}
-          onClick={() => setFilter('all')}
-        >
+        <button className={`filter-chip ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
           All ({totalCount})
         </button>
-        <button
-          className={`filter-chip ${filter === 'running' ? 'active' : ''}`}
-          onClick={() => setFilter('running')}
-        >
+        <button className={`filter-chip ${filter === 'running' ? 'active' : ''}`} onClick={() => setFilter('running')}>
           Running ({runningCount})
         </button>
-        <button
-          className={`filter-chip ${filter === 'stopped' ? 'active' : ''}`}
-          onClick={() => setFilter('stopped')}
-        >
+        <button className={`filter-chip ${filter === 'stopped' ? 'active' : ''}`} onClick={() => setFilter('stopped')}>
           Stopped ({stoppedCount})
         </button>
-        <button
-          className={`filter-chip ${filter === 'paused' ? 'active' : ''}`}
-          onClick={() => setFilter('paused')}
-        >
+        <button className={`filter-chip ${filter === 'paused' ? 'active' : ''}`} onClick={() => setFilter('paused')}>
           Paused ({pausedCount})
         </button>
 
@@ -315,11 +279,11 @@ export default function VirtualMachinesPage() {
                     <td>{vm.node}</td>
                     <td>
                       <div className="mono" style={{ fontSize: '0.85rem' }}>
-                        {(vm.cpu || 0).toFixed(1)} cores
+                        {vm.cpus || vm.maxcpu || '—'} {vm.cpus === 1 ? 'core' : 'cores'}
                       </div>
-                      {vm.status === 'running' && (
+                      {vm.status === 'running' && vm.cpu !== undefined && (
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                          {(vm.cpuusage || 0).toFixed(1)}%
+                          {(vm.cpu * 100).toFixed(1)}% usage
                         </div>
                       )}
                     </td>
@@ -327,9 +291,9 @@ export default function VirtualMachinesPage() {
                       <div className="mono" style={{ fontSize: '0.85rem' }}>
                         {formatBytes(vm.maxmem)}
                       </div>
-                      {vm.status === 'running' && vm.mem && (
+                      {vm.status === 'running' && vm.mem !== undefined && vm.maxmem && (
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                          {pct(vm.mem, vm.maxmem).toFixed(1)}%
+                          {pct(vm.mem, vm.maxmem).toFixed(1)}% used
                         </div>
                       )}
                     </td>

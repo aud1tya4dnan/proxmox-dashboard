@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { useProxmoxStore } from '../store/useProxmoxStore'
 import { formatTime } from '../utils/format'
 
-const REFRESH_INTERVAL = 30 // seconds
+const REFRESH_INTERVAL = 5 // seconds
 
 export default function RefreshBar() {
-  const { lastRefresh, refreshAll, loading, connected } = useProxmoxStore()
+  const { lastRefresh, refreshAll, refreshing, connected, nodes } = useProxmoxStore()
   const [countdown, setCountdown] = useState(REFRESH_INTERVAL)
 
   useEffect(() => {
@@ -20,6 +20,11 @@ export default function RefreshBar() {
     return () => clearInterval(interval)
   }, [lastRefresh])
 
+  const handleRefresh = () => {
+    const hasData = nodes && nodes.length > 0
+    refreshAll(!hasData)
+  }
+
   const progress = ((REFRESH_INTERVAL - countdown) / REFRESH_INTERVAL) * 100
 
   return (
@@ -31,10 +36,7 @@ export default function RefreshBar() {
         {connected && (
           <div className="refresh-countdown">
             <div className="refresh-progress">
-              <div
-                className="refresh-progress-fill"
-                style={{ width: `${progress}%` }}
-              />
+              <div className="refresh-progress-fill" style={{ width: `${progress}%` }} />
             </div>
             <span>Refresh in {countdown}s</span>
           </div>
@@ -43,11 +45,11 @@ export default function RefreshBar() {
       <div className="topbar-right">
         <button
           className="btn btn-ghost btn-sm"
-          onClick={refreshAll}
-          disabled={loading || !connected}
+          onClick={handleRefresh}
+          disabled={refreshing || !connected}
           id="btn-manual-refresh"
         >
-          {loading ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> : '↺'}
+          {refreshing ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> : '↺'}
           Refresh
         </button>
       </div>

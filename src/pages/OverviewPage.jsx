@@ -1,35 +1,12 @@
-import { useEffect, useState } from 'react'
-import { useProxmoxStore } from '../store/useProxmoxStore'
+import DonutChart from '../components/DonutChart'
 import MetricCard from '../components/MetricCard'
 import NodeCard from '../components/NodeCard'
-import DonutChart from '../components/DonutChart'
 import RefreshBar from '../components/RefreshBar'
+import { useProxmoxStore } from '../store/useProxmoxStore'
 import { formatBytes, formatUptime } from '../utils/format'
 
-console.log('OverviewPage rendered') // Debug logging
-
 export default function OverviewPage() {
-  const {
-    clusterStatus,
-    nodes,
-    nodeStatuses,
-    vms,
-    storage,
-    loading,
-    lastRefresh,
-    refreshAll,
-  } = useProxmoxStore()
-
-  const [countdown, setCountdown] = useState(30)
-
-  useEffect(() => {
-    // Countdown timer for auto-refresh
-    const timer = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 30))
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
+  const { nodes, nodeStatuses, vms, storage, loading } = useProxmoxStore()
 
   // Calculate summary metrics
   const totalNodes = nodes.length
@@ -45,17 +22,18 @@ export default function OverviewPage() {
   let totalMemMax = 0
   let totalUptime = 0
 
-  Object.entries(nodeStatuses).forEach(([nodeName, status]) => {
+  Object.entries(nodeStatuses).forEach(([_nodeName, status]) => {
     if (status) {
-      // CPU usage - Proxmox returns CPU usage as a percentage (0-1)
+      // CPU usage - Proxmox returns CPU usage as a fraction (0-1)
       const cpuUsage = status.cpu || 0
-      const cpuCores = status.cpus || 1
-      totalCpuUsed += cpuUsage * cpuCores // Calculate actual CPU usage considering cores
+      const cpuCores = status.cpus || status.cpuinfo?.cpus || 1
+      totalCpuUsed += cpuUsage * cpuCores // Weighted by core count
       totalCpuMax += cpuCores // Each node contributes its number of cores
 
-      // Memory usage
-      totalMemUsed += status.mem?.used || 0
-      totalMemMax += status.mem?.total || 0
+      // Memory usage — Proxmox uses 'memory' in node status, fallback to 'mem'
+      const memObj = status.memory || status.mem || {}
+      totalMemUsed += memObj.used || 0
+      totalMemMax += memObj.total || 0
 
       // Uptime (sum of all nodes)
       totalUptime += status.uptime || 0
@@ -84,12 +62,7 @@ export default function OverviewPage() {
   return (
     <div className="page">
       {/* Header */}
-      <RefreshBar
-        lastRefresh={lastRefresh}
-        countdown={countdown}
-        onRefresh={refreshAll}
-        loading={loading}
-      />
+      <RefreshBar />
 
       <div className="page-header">
         <h1>Overview</h1>
@@ -134,13 +107,7 @@ export default function OverviewPage() {
               color="#bc8cff"
               subtext={`${totalVMs - runningVMs} stopped`}
             />
-            <MetricCard
-              title="Containers"
-              value={totalLXCs}
-              icon="📦"
-              color="#3fb950"
-              subtext="LXC instances"
-            />
+            <MetricCard title="Containers" value={totalLXCs} icon="📦" color="#3fb950" subtext="LXC instances" />
             <MetricCard
               title="Cluster Uptime"
               value={formatUptime(avgUptime)}
@@ -153,7 +120,7 @@ export default function OverviewPage() {
               value={`${storageUsage.toFixed(1)}%`}
               icon="💾"
               color="#f0883e"
-              subtext={`${((totalStorageUsed / 1024 ** 4).toFixed(2))} / ${((totalStorageTotal / 1024 ** 4).toFixed(2))} TB`}
+              subtext={`${(totalStorageUsed / 1024 ** 4).toFixed(2)} / ${(totalStorageTotal / 1024 ** 4).toFixed(2)} TB`}
             />
           </div>
 
@@ -235,15 +202,21 @@ export default function OverviewPage() {
                 <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)' }}>{totalVMs}</div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Total Containers</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  Total Containers
+                </div>
                 <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)' }}>{totalLXCs}</div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Running Instances</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  Running Instances
+                </div>
                 <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--green)' }}>{runningVMs}</div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Storage Pools</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  Storage Pools
+                </div>
                 <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                   {Object.values(storage).reduce((acc, list) => acc + list.length, 0)}
                 </div>

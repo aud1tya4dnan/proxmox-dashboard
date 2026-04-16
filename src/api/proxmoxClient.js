@@ -32,8 +32,7 @@ export const fetchClusterTasks = () => get(EP.CLUSTER_TASKS)
 // ─── Nodes ────────────────────────────────────────────────────────────────────
 export const fetchNodes = () => get(EP.NODES)
 export const fetchNodeStatus = (node) => get(EP.NODE_STATUS(node))
-export const fetchNodeRrd = (node, timeframe = 'hour') =>
-  get(EP.NODE_RRD(node), { timeframe, cf: 'AVERAGE' })
+export const fetchNodeRrd = (node, timeframe = 'hour') => get(EP.NODE_RRD(node), { timeframe, cf: 'AVERAGE' })
 
 // ─── VMs (QEMU) ───────────────────────────────────────────────────────────────
 export const fetchQemuList = (node) => get(EP.QEMU_LIST(node))

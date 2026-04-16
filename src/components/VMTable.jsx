@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { formatBytes, pct, thresholdClass } from '../utils/format'
 import StatusBadge from './StatusBadge'
 import VMActionButtons from './VMActionButtons'
-import { formatBytes, pct, thresholdClass } from '../utils/format'
 
 const FILTERS = ['all', 'running', 'stopped', 'qemu', 'lxc']
 
@@ -13,7 +13,10 @@ export default function VMTable({ vms = [] }) {
 
   const handleSort = (key) => {
     if (sortKey === key) setSortAsc((a) => !a)
-    else { setSortKey(key); setSortAsc(true) }
+    else {
+      setSortKey(key)
+      setSortAsc(true)
+    }
   }
 
   const filtered = useMemo(() => {
@@ -22,9 +25,13 @@ export default function VMTable({ vms = [] }) {
       const q = search.toLowerCase()
       list = list.filter(
         (v) =>
-          String(v.name || '').toLowerCase().includes(q) ||
+          String(v.name || '')
+            .toLowerCase()
+            .includes(q) ||
           String(v.vmid).includes(q) ||
-          String(v.node || '').toLowerCase().includes(q)
+          String(v.node || '')
+            .toLowerCase()
+            .includes(q),
       )
     }
     if (filter === 'running') list = list.filter((v) => v.status === 'running')
@@ -33,7 +40,8 @@ export default function VMTable({ vms = [] }) {
     else if (filter === 'lxc') list = list.filter((v) => v.type === 'lxc')
 
     list = [...list].sort((a, b) => {
-      let av = a[sortKey] ?? '', bv = b[sortKey] ?? ''
+      let av = a[sortKey] ?? '',
+        bv = b[sortKey] ?? ''
       if (typeof av === 'string') av = av.toLowerCase()
       if (typeof bv === 'string') bv = bv.toLowerCase()
       if (av < bv) return sortAsc ? -1 : 1
@@ -86,11 +94,19 @@ export default function VMTable({ vms = [] }) {
           <table>
             <thead>
               <tr>
-                <th onClick={() => handleSort('vmid')}>ID <SortIndicator col="vmid" /></th>
-                <th onClick={() => handleSort('name')}>Name <SortIndicator col="name" /></th>
+                <th onClick={() => handleSort('vmid')}>
+                  ID <SortIndicator col="vmid" />
+                </th>
+                <th onClick={() => handleSort('name')}>
+                  Name <SortIndicator col="name" />
+                </th>
                 <th>Type</th>
-                <th onClick={() => handleSort('node')}>Node <SortIndicator col="node" /></th>
-                <th onClick={() => handleSort('status')}>Status <SortIndicator col="status" /></th>
+                <th onClick={() => handleSort('node')}>
+                  Node <SortIndicator col="node" />
+                </th>
+                <th onClick={() => handleSort('status')}>
+                  Status <SortIndicator col="status" />
+                </th>
                 <th>CPU</th>
                 <th>Memory</th>
                 <th>Disk</th>
@@ -99,8 +115,8 @@ export default function VMTable({ vms = [] }) {
             </thead>
             <tbody>
               {filtered.map((vm) => {
-                const cpuPct  = Math.round((vm.cpu ?? 0) * 100)
-                const memPct  = pct(vm.mem ?? 0, vm.maxmem ?? 1)
+                const cpuPct = Math.round((vm.cpu ?? 0) * 100)
+                const memPct = pct(vm.mem ?? 0, vm.maxmem ?? 1)
                 const diskPct = pct(vm.disk ?? 0, vm.maxdisk ?? 1)
                 return (
                   <tr key={`${vm.type}-${vm.vmid}`} id={`vm-row-${vm.vmid}`}>
@@ -122,12 +138,19 @@ export default function VMTable({ vms = [] }) {
                       </span>
                     </td>
                     <td className="text-secondary">{vm.node}</td>
-                    <td><StatusBadge status={vm.status} /></td>
+                    <td>
+                      <StatusBadge status={vm.status} />
+                    </td>
                     <td>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 80 }}>
-                        <span className="mono" style={{ fontSize: '0.8rem' }}>{cpuPct}%</span>
+                        <span className="mono" style={{ fontSize: '0.8rem' }}>
+                          {cpuPct}%
+                        </span>
                         <div className="progress-bar">
-                          <div className={`progress-bar-fill ${thresholdClass(cpuPct)}`} style={{ width: `${cpuPct}%` }} />
+                          <div
+                            className={`progress-bar-fill ${thresholdClass(cpuPct)}`}
+                            style={{ width: `${cpuPct}%` }}
+                          />
                         </div>
                       </div>
                     </td>
@@ -137,7 +160,10 @@ export default function VMTable({ vms = [] }) {
                           {formatBytes(vm.mem)} / {formatBytes(vm.maxmem)}
                         </span>
                         <div className="progress-bar">
-                          <div className={`progress-bar-fill ${thresholdClass(memPct)}`} style={{ width: `${memPct}%` }} />
+                          <div
+                            className={`progress-bar-fill ${thresholdClass(memPct)}`}
+                            style={{ width: `${memPct}%` }}
+                          />
                         </div>
                       </div>
                     </td>
@@ -147,11 +173,16 @@ export default function VMTable({ vms = [] }) {
                           {formatBytes(vm.disk)} / {formatBytes(vm.maxdisk)}
                         </span>
                         <div className="progress-bar">
-                          <div className={`progress-bar-fill ${thresholdClass(diskPct)}`} style={{ width: `${diskPct}%` }} />
+                          <div
+                            className={`progress-bar-fill ${thresholdClass(diskPct)}`}
+                            style={{ width: `${diskPct}%` }}
+                          />
                         </div>
                       </div>
                     </td>
-                    <td><VMActionButtons vm={vm} /></td>
+                    <td>
+                      <VMActionButtons vm={vm} />
+                    </td>
                   </tr>
                 )
               })}

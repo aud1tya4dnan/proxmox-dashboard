@@ -1,26 +1,26 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import {
-  initClient,
-  fetchNodes,
-  fetchNodeStatus,
-  fetchNodeRrd,
-  fetchQemuList,
-  fetchLxcList,
   fetchClusterStatus,
+  fetchLxcList,
+  fetchNodeRrd,
+  fetchNodeStatus,
+  fetchNodes,
+  fetchQemuList,
   fetchStorage,
+  initClient,
   pingProxmox,
-  startQemu,
-  stopQemu,
+  rebootLxc,
   rebootQemu,
+  shutdownLxc,
   shutdownQemu,
   startLxc,
+  startQemu,
   stopLxc,
-  rebootLxc,
-  shutdownLxc,
+  stopQemu,
 } from '../api/proxmoxClient'
 
-const REFRESH_INTERVAL = 30000 // 30 seconds
+const REFRESH_INTERVAL = 5000 // 30 seconds
 
 export const useProxmoxStore = create(
   persist(
@@ -34,13 +34,14 @@ export const useProxmoxStore = create(
       // ── Data ─────────────────────────────────────────────────────────
       clusterStatus: [],
       nodes: [],
-      nodeStatuses: {},   // { [nodeName]: statusObj }
-      nodeRrd: {},        // { [nodeName]: rrdArray }
-      vms: [],            // flat array, type: 'qemu' | 'lxc', enriched with node
-      storage: {},        // { [nodeName]: storageArray }
+      nodeStatuses: {}, // { [nodeName]: statusObj }
+      nodeRrd: {}, // { [nodeName]: rrdArray }
+      vms: [], // flat array, type: 'qemu' | 'lxc', enriched with node
+      storage: {}, // { [nodeName]: storageArray }
 
       // ── UI State ─────────────────────────────────────────────────────
       loading: false,
+      refreshing: false,
       lastRefresh: null,
       refreshTimer: null,
       actionLoading: {}, // { [vmid]: true }
@@ -90,8 +91,8 @@ export const useProxmoxStore = create(
         })
       },
 
-      refreshAll: async () => {
-        set({ loading: true })
+      refreshAll: async (silent = false) => {
+        set({ loading: !silent, refreshing: true })
         try {
           const [clusterStatus, nodes] = await Promise.all([
             fetchClusterStatus().catch((err) => {
@@ -130,25 +131,25 @@ export const useProxmoxStore = create(
                 }),
               ])
               return { node: n.node, status, rrd, qemuList, lxcList, storageList }
-            })
+            }),
           )
 
-          console.log('Node details:', nodeDetails) // Debug logging
+          console.log('Node details:', nodeDetails)
 
           const nodeStatuses = {}
           const nodeRrd = {}
           const storage = {}
           const vms = []
 
-          nodeDetails.forEach((res) => {
-            if (res.status !== 'fulfilled') return
+          for (const res of nodeDetails) {
+            if (res.status !== 'fulfilled') continue
             const { node, status, rrd, qemuList, lxcList, storageList } = res.value
             nodeStatuses[node] = status
             nodeRrd[node] = rrd
             storage[node] = storageList
-            qemuList.forEach((vm) => vms.push({ ...vm, node, type: 'qemu' }))
-            lxcList.forEach((ct) => vms.push({ ...ct, node, type: 'lxc' }))
-          })
+            for (const vm of qemuList) vms.push({ ...vm, node, type: 'qemu' })
+            for (const ct of lxcList) vms.push({ ...ct, node, type: 'lxc' })
+          }
 
           set({
             clusterStatus,
@@ -158,24 +159,24 @@ export const useProxmoxStore = create(
             vms,
             storage,
             loading: false,
+            refreshing: false,
             lastRefresh: Date.now(),
           })
 
           console.log('Refresh complete:', { clusterStatus, nodes, vms, storage })
         } catch {
-          set({ loading: false })
+          set({ loading: false, refreshing: false })
         }
       },
 
       startAutoRefresh: () => {
         const existing = get().refreshTimer
         if (existing) clearInterval(existing)
-        const timer = setInterval(() => get().refreshAll(), REFRESH_INTERVAL)
+        const timer = setInterval(() => get().refreshAll(true), REFRESH_INTERVAL)
         set({ refreshTimer: timer })
       },
 
-      setActionLoading: (vmid, state) =>
-        set((s) => ({ actionLoading: { ...s.actionLoading, [vmid]: state } })),
+      setActionLoading: (vmid, state) => set((s) => ({ actionLoading: { ...s.actionLoading, [vmid]: state } })),
 
       // VM Actions
       startQemu: async (node, vmid) => {
@@ -217,6 +218,6 @@ export const useProxmoxStore = create(
         apiToken: state.apiToken,
         proxmoxHost: state.proxmoxHost,
       }),
-    }
-  )
+    },
+  ),
 )

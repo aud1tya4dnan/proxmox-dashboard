@@ -1,9 +1,15 @@
 import { useState } from 'react'
-import { useProxmoxStore } from '../store/useProxmoxStore'
 import {
-  startQemu, stopQemu, rebootQemu, shutdownQemu,
-  startLxc, stopLxc, rebootLxc, shutdownLxc,
+  rebootLxc,
+  rebootQemu,
+  shutdownLxc,
+  shutdownQemu,
+  startLxc,
+  startQemu,
+  stopLxc,
+  stopQemu,
 } from '../api/proxmoxClient'
+import { useProxmoxStore } from '../store/useProxmoxStore'
 
 export default function VMActionButtons({ vm }) {
   const { refreshAll } = useProxmoxStore()
@@ -26,9 +32,9 @@ export default function VMActionButtons({ vm }) {
     setConfirm(null)
   }
 
-  const start   = () => action(isQemu ? startQemu   : startLxc)
-  const stop    = () => action(isQemu ? stopQemu    : stopLxc)
-  const reboot  = () => action(isQemu ? rebootQemu  : rebootLxc)
+  const start = () => action(isQemu ? startQemu : startLxc)
+  const stop = () => action(isQemu ? stopQemu : stopLxc)
+  const reboot = () => action(isQemu ? rebootQemu : rebootLxc)
   const shutdown = () => action(isQemu ? shutdownQemu : shutdownLxc)
 
   if (confirm) {
@@ -45,11 +51,7 @@ export default function VMActionButtons({ vm }) {
         >
           {busy ? '…' : 'Yes'}
         </button>
-        <button
-          className="btn btn-ghost btn-sm"
-          onClick={() => setConfirm(null)}
-          id={`btn-cancel-${vm.vmid}`}
-        >
+        <button className="btn btn-ghost btn-sm" onClick={() => setConfirm(null)} id={`btn-cancel-${vm.vmid}`}>
           Cancel
         </button>
       </div>
@@ -103,7 +105,9 @@ export default function VMActionButtons({ vm }) {
       )}
 
       {!isStopped && !isRunning && (
-        <span className="text-muted" style={{ fontSize: '0.8rem' }}>—</span>
+        <span className="text-muted" style={{ fontSize: '0.8rem' }}>
+          —
+        </span>
       )}
     </div>
   )
