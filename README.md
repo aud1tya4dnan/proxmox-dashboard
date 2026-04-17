@@ -2,6 +2,8 @@
 
 A real-time monitoring dashboard for Proxmox VE clusters. Connects to the Proxmox REST API to display node health, VM/LXC status, storage usage, and cluster metrics from any browser.
 
+![Proxmox Dashboard Overview](./images/Overview.png)
+
 ## Features
 
 - **Cluster Overview** — At-a-glance cluster health, resource usage, and recent tasks
